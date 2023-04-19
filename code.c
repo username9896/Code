@@ -16,26 +16,23 @@ using namespace std;
 
 mutex mutex1;
 
-//initializing number of threads for prod and cons
 int p_num_threads = 2;
 int c_num_threads = 2;
 
-int hour_ind = 48; //this value will be used to check if an hour passed by (48 rows for an hour)
+int hour_ind = 48;
 
-int ccount = 0; //prod counter
-int con_count = 0; //cons counter
-int m = 0; //number of rows
+int ccount = 0;
+int con_count = 0;
+int m = 0;
 
-condition_variable producer_cv, consumer_cv; //initializing condition variables for prod and cons
+condition_variable producer_cv, consumer_cv;
 
-//string variables and vectors are initialized to get values from the data file
 string ind, t_stamp, tr_light_id, no_of_cars;
 vector<int> in;
 vector<int> tr_light;
 vector<int> no_cars;
 vector<string> tstamp;
 
-//struct for traffic data row
 struct tr_signal
 {
     int ind;
@@ -44,14 +41,11 @@ struct tr_signal
     int num_cars;
 };
 
-//tr_signal array of four is initialized to hold the totals of each of the 4 traffic lights
 tr_signal tlSorter[4] = {{0, "", 1, 0}, {0, "", 2, 0}, {0, "", 3, 0}, {0, "", 4, 0}};
 
-//queue to store traffic light data
 queue<tr_signal> tr_sig_queue;
 tr_signal sig;
 
-//function to sort traffic light data
 bool sort_method(struct tr_signal first, struct tr_signal second)
 {
     if (first.num_cars > second.num_cars)
@@ -63,20 +57,20 @@ void* produce(void* args)
 {
     while (ccount < m)
     {
-        unique_lock<mutex> lk(mutex1); //locking until producer finishes processing 
+        unique_lock<mutex> lk(mutex1);
 
-        if (ccount < m) //if count is less than the number of rows in the dataset 
+        if (ccount < m)
         {
-            tr_sig_queue.push(tr_signal{in[ccount], tstamp[ccount], tr_light[ccount], no_cars[ccount]}); //push into queue
-            consumer_cv.notify_all(); //notifying consumer threads
+            tr_sig_queue.push(tr_signal{in[ccount], tstamp[ccount], tr_light[ccount], no_cars[ccount]});
+            consumer_cv.notify_all();
             ccount++;
         }
         else
         {
-            producer_cv.wait(lk, []{ return ccount < m; }); //if count is greater than the number of rows in the data set wait
+            producer_cv.wait(lk, []{ return ccount < m; });
         }
 
-        lk.unlock(); //unlock after processing
+        lk.unlock();
         sleep(rand() % 3);
     }
 }
@@ -127,8 +121,7 @@ void* consume(void* args) {
 void get_traff_data() { 
     ifstream infile;
     string file;
-    cout << "Hi  Vicky" << endl;
-    cout << "Welcome to Traffic Control Simulator" << endl;
+    cout << "Traffic Control Simulator" << endl;
     cout << "Enter the filename: ";
     cin >> file;
 
@@ -154,7 +147,7 @@ void get_traff_data() {
         infile.close();
     }
     else {
-        printf("Could not open file, try again.");
+        printf("Cannot Open the file");
     }
 }
 
@@ -162,7 +155,6 @@ void get_traff_data() {
 int main()
 {
 get_traff_data();
-// Create the producer and consumer threads
 thread producer[p_num_threads];
 thread consumer[c_num_threads];
 
@@ -175,7 +167,6 @@ for (int i = 0; i < c_num_threads; i++)
     consumer[i] = thread(consume, (void*)NULL);
 }
 
-// Join the producer and consumer threads
 for (int i = 0; i < p_num_threads; i++)
 {
     producer[i].join();
